@@ -56,7 +56,13 @@ In this exercise you will:
 #### Reflection Questions
 
 1. **What does `typedef struct { ... } Point;` achieve compared to `struct Point { ... };`?**
+```
+Ohne `typedef` muss man immer `struct Point` schreiben, um die Struktur zu verwenden, z. B. `struct Point p;`. Mit `typedef` kann man einfach `Point p;` schreiben, weil `Point` ein Alias für die Struktur ist. Das macht den Code kürzer und lesbarer.
+```
 2. **How does the compiler lay out a `Point` in memory?**
+```
+Ein `Point` hat zwei `double`-Felder (`x` und `y`). Ein `double` ist normalerweise 8 Bytes groß, also braucht `Point` 16 Bytes. Der Compiler legt `x` und `y` nacheinander im Speicher ab, ohne Padding (da beide `double` sind und korrekt ausgerichtet). Die Reihenfolge ist `x` zuerst, dann `y`.
+```
 
 ---
 
@@ -74,8 +80,13 @@ In this exercise you will:
 #### Reflection Questions
 
 1. **Why is the `-lm` flag necessary to resolve `sqrt`?**
+```
+Die `sqrt`-Funktion ist in der Math-Bibliothek (`libm`), die nicht automatisch gelinkt wird. Der `-lm`-Flag sagt dem Linker, dass er `libm.a` oder `libm.so` einbinden soll, damit `sqrt` gefunden wird.
+```
 2. **What happens if you omit `-lm` when calling math functions?**
-
+```
+Ohne `-lm` gibt’s einen Linker-Fehler, z. B. `undefined reference to sqrt`, weil der Compiler die Funktion nicht in der Standardbibliothek findet. Das Programm wird nicht erstellt.
+```
 ---
 
 ### Task 2: Header-Only Library
@@ -105,8 +116,14 @@ In this exercise you will:
 #### Reflection Questions
 
 1. **What are the advantages and drawbacks of a header-only library?**
+```
+Vorteile: Einfach zu benutzen, kein separates Kompilieren/Linken nötig, alles in einer Datei. Gut für kleine, portable Projekte.  
+Nachteile: Kann die Kompilierzeit erhöhen, da der Code bei jeder Kompilierung eingebunden wird. Größerer Binärcode, wenn Funktionen oft eingebunden werden. Keine Trennung zwischen Schnittstelle und Implementierung.
+```
 2. **How does `static inline` affect linkage and code size?**
-
+```
+static inline` macht die Funktion lokal für jede Übersetzungseinheit, es gibt keine externe Verlinkung, also keine Symbolkonflikte. Der Compiler kann die Funktion direkt einbetten, was schneller ist, aber die Codegröße erhöhen kann, wenn sie oft verwendet wird. Ohne `inline` könnte der Compiler entscheiden, die Funktion nicht einzubetten, was die Binärgröße kleiner hält, aber Aufrufe langsamer macht.
+```
 ---
 
 ### Task 3: Precompiled Static Library
@@ -129,8 +146,14 @@ In this exercise you will:
 #### Reflection Questions
 
 1. **Why must you include `solutions/util.o` when linking instead of just the header?**
+```
+Der Header (`util.h`) enthält nur die Deklaration von `clamp`, nicht die Implementierung. Die Implementierung ist in `util.c`, das zu `util.o` kompiliert wurde. Beim Linken braucht der Linker `util.o`, um den tatsächlichen Code für `clamp` einzubinden, sonst gibt’s einen `undefined reference`-Fehler.
+```
 2. **What symbol resolution occurs at compile vs. link time?**
-
+```
+Kompilierzeit: Der Compiler prüft die Syntax und generiert Objektdateien (z. B. `util.o`), wobei externe Funktionen wie `clamp` als Symbole markiert werden, ohne ihren Code aufzulösen.  
+ Linkzeit: Der Linker löst diese Symbole auf, indem er den Code aus `util.o` mit `util_main.c` verbindet, um ein ausführbares Programm zu erstellen.
+```
 ---
 
 ### Task 4: Packaging into `.a` and System Installation
@@ -160,8 +183,14 @@ In this exercise you will:
 #### Reflection Questions
 
 1. **How does `ar` create an archive, and how does the linker find `-lutil`?**
-2. **What is the purpose of `ldconfig`?**
+```
+`ar` packt Objektdateien (z. B. `util.o`) in ein Archiv (`libutil.a`), das eine Sammlung von kompilierten Funktionen ist. Es erstellt einen Index für Symbole (z. B. `clamp`), damit der Linker sie findet. Bei `-lutil` sucht der Linker in Standardpfaden wie `/usr/local/lib` nach `libutil.a` oder `libutil.so` und bindet die benötigten Symbole ein.
 
+```
+2. **What is the purpose of `ldconfig`?**
+```
+`ldconfig` aktualisiert den Cache des Linkers (`/etc/ld.so.cache`), damit er neue Bibliotheken in `/usr/local/lib` findet. Ohne `ldconfig` würde der Linker `-lutil` nicht erkennen, da der Cache veraltet ist.
+```
 ---
 
 ### Task 5: Installing and Using `jansson`
@@ -197,8 +226,13 @@ In this exercise you will:
 #### Reflection Questions
 
 1. **What files does `libjansson-dev` install, and where?**
+```
+`libjansson-dev` installiert Header-Dateien (z. B. `jansson.h`) in `/usr/include` und Bibliotheken (`libjansson.a`, `libjansson.so`) in `/usr/lib/x86_64-linux-gnu`. Außerdem gibt’s Konfigurationsdateien wie `jansson.pc` in `/usr/lib/x86_64-linux-gnu/pkgconfig` für `pkg-config`.
+```
 2. **How does the linker know where to find `-ljansson`?**
-
+```
+Der Linker sucht bei `-ljansson` nach `libjansson.a` oder `libjansson.so` in Standardpfaden wie `/usr/lib`, `/usr/lib/x86_64-linux-gnu` oder `/usr/local/lib`. Der Pfad wird durch die Installation von `libjansson-dev` und `ldconfig` konfiguriert, das den Cache (`/etc/ld.so.cache`) aktualisiert.
+```
 ---
 
 ### Task 6: Building and Installing a GitHub Library

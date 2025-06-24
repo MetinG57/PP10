@@ -1,5 +1,5 @@
 #include <stdio.h>
-     #include "libutil.h"
+     #include "util.h"
 
      int main(void) {
          int result = clamp(15, 0, 10);  // Teste clamp mit v=15, lo=0, hi=10
